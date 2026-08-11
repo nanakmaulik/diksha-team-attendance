@@ -155,6 +155,14 @@ export default function AttendancePage() {
   return (
     <main className="min-h-screen bg-orange-50 px-4 py-8 text-zinc-900">
       <div className="mx-auto max-w-md rounded-3xl bg-white p-6 shadow-xl">
+      <div className="mb-5 flex justify-end">
+  <a
+    href="/admin"
+    className="rounded-full bg-zinc-100 px-4 py-2 text-xs font-bold text-zinc-700"
+  >
+    Admin Dashboard
+  </a>
+</div>
         <div className="text-center">
           <p className="text-lg font-semibold text-orange-700">श्री हरिवंश</p>
           <h1 className="mt-2 text-3xl font-bold">Diksha Team Attendance</h1>
