@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getIndiaDateKey } from "@/lib/geo";
+import CopyWhatsAppSummary from "./CopyWhatsAppSummary";
 
 type AdminSearchParams =
   | Promise<{
@@ -24,7 +25,7 @@ export default async function AdminPage({
 }) {
   const params = await Promise.resolve(searchParams);
 
-  const adminPin = process.env.ADMIN_PIN || "1234";
+  const adminPin = process.env.ADMIN_PIN || "1175";
 
   if (params?.pin !== adminPin) {
     return (
@@ -192,16 +193,7 @@ export default async function AdminPage({
           </div>
         </div>
 
-        <div className="mt-6 rounded-3xl bg-white p-6 shadow">
-        <h2 className="text-xl font-extrabold text-zinc-900">WhatsApp Summary</h2>
-          <p className="mt-1 text-sm text-zinc-500">
-            Is message ko copy karke WhatsApp group me bhej sakte ho.
-          </p>
-
-          <pre className="mt-4 whitespace-pre-wrap rounded-2xl bg-zinc-900 p-4 text-sm text-white">
-            {summaryMessage}
-          </pre>
-        </div>
+        <CopyWhatsAppSummary message={summaryMessage} />
 
         <div className="mt-6 overflow-x-auto rounded-3xl bg-white text-zinc-900 shadow">
           <table className="min-w-full text-left text-sm">
