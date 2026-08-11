@@ -89,12 +89,7 @@ export default async function AdminPage({
 
   const summaryMessage = buildSummaryMessage({
     selectedDate,
-    total: rows.length,
-    morning: morning.length,
-    evening: evening.length,
-    valid: valid.length,
-    outside: outside.length,
-    lowAccuracy: lowAccuracy.length,
+    rows,
   });
 
   return (
@@ -331,34 +326,102 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function buildSummaryMessage({
-  selectedDate,
-  total,
-  morning,
-  evening,
-  valid,
-  outside,
-  lowAccuracy,
-}: {
-  selectedDate: string;
-  total: number;
-  morning: number;
-  evening: number;
-  valid: number;
-  outside: number;
-  lowAccuracy: number;
-}) {
-  return [
-    "🙏 श्री हरिवंश 🙏",
-    "",
-    "📋 Diksha Team Attendance Summary",
-    `📅 Date: ${selectedDate}`,
-    "",
-    `✅ Total Attendance: ${total}`,
-    `🌅 Morning Seva: ${morning}`,
-    `🌙 Evening Seva: ${evening}`,
-    "",
-    `✅ Valid Location: ${valid}`,
-    `⚠️ Outside Location: ${outside}`,
-    `📍 Low GPS Accuracy: ${lowAccuracy}`,
-  ].join("\n");
-}
+    selectedDate,
+    rows,
+  }: {
+    selectedDate: string;
+    rows: Array<{
+      final_name: string;
+      seva_type: string;
+      submitted_at: string;
+      location_status: string;
+      distance_from_center_meters: number | null;
+    }>;
+  }) {
+    const morningRows = rows
+      .filter((row) => row.seva_type === "Morning Seva")
+      .sort(
+        (a, b) =>
+          new Date(a.submitted_at).getTime() -
+          new Date(b.submitted_at).getTime()
+      );
+  
+    const eveningRows = rows
+      .filter((row) => row.seva_type === "Evening Seva")
+      .sort(
+        (a, b) =>
+          new Date(a.submitted_at).getTime() -
+          new Date(b.submitted_at).getTime()
+      );
+  
+    const valid = rows.filter((row) => row.location_status === "VALID");
+    const outside = rows.filter(
+      (row) => row.location_status === "OUTSIDE_LOCATION"
+    );
+    const lowAccuracy = rows.filter(
+      (row) => row.location_status === "LOW_ACCURACY"
+    );
+  
+    const formatTime = (dateValue: string) =>
+      new Date(dateValue).toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+  
+    const statusIcon = (status: string) => {
+      if (status === "VALID") return "✅";
+      if (status === "OUTSIDE_LOCATION") return "⚠️";
+      if (status === "LOW_ACCURACY") return "📍";
+      return "ℹ️";
+    };
+  
+    const formatDistance = (distance: number | null) => {
+      if (distance === null) return "";
+      return ` | ${Math.round(distance)}m`;
+    };
+  
+    const makeNameLines = (
+      records: Array<{
+        final_name: string;
+        submitted_at: string;
+        location_status: string;
+        distance_from_center_meters: number | null;
+      }>
+    ) => {
+      if (records.length === 0) {
+        return ["No attendance marked."];
+      }
+  
+      return records.map((row, index) => {
+        return `${index + 1}. ${row.final_name} — ${formatTime(
+          row.submitted_at
+        )} ${statusIcon(row.location_status)}${formatDistance(
+          row.distance_from_center_meters
+        )}`;
+      });
+    };
+  
+    return [
+      "🙏 श्री हरिवंश 🙏",
+      "",
+      "📋 *Diksha Team Attendance Summary*",
+      `📅 Date: ${selectedDate}`,
+      "",
+      `✅ Total Attendance: ${rows.length}`,
+      `🌅 Morning Seva: ${morningRows.length}`,
+      `🌙 Evening Seva: ${eveningRows.length}`,
+      "",
+      `✅ Valid Location: ${valid.length}`,
+      `⚠️ Outside Location: ${outside.length}`,
+      `📍 Low GPS Accuracy: ${lowAccuracy.length}`,
+      "",
+      "🌅 *Morning Seva Attendance*",
+      ...makeNameLines(morningRows),
+      "",
+      "🌙 *Evening Seva Attendance*",
+      ...makeNameLines(eveningRows),
+      "",
+      "✅ = Valid | ⚠️ = Outside | 📍 = Low GPS Accuracy",
+    ].join("\n");
+  }
