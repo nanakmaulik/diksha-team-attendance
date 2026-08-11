@@ -335,7 +335,6 @@ function buildSummaryMessage({
       seva_type: string;
       submitted_at: string;
       location_status: string;
-      distance_from_center_meters: number | null;
     }>;
   }) {
     const morningRows = rows
@@ -376,17 +375,11 @@ function buildSummaryMessage({
       return "ℹ️";
     };
   
-    const formatDistance = (distance: number | null) => {
-      if (distance === null) return "";
-      return ` | ${Math.round(distance)}m`;
-    };
-  
     const makeNameLines = (
       records: Array<{
         final_name: string;
         submitted_at: string;
         location_status: string;
-        distance_from_center_meters: number | null;
       }>
     ) => {
       if (records.length === 0) {
@@ -396,9 +389,7 @@ function buildSummaryMessage({
       return records.map((row, index) => {
         return `${index + 1}. ${row.final_name} — ${formatTime(
           row.submitted_at
-        )} ${statusIcon(row.location_status)}${formatDistance(
-          row.distance_from_center_meters
-        )}`;
+        )} ${statusIcon(row.location_status)}`;
       });
     };
   
