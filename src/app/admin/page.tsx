@@ -98,16 +98,16 @@ export default async function AdminPage({
   });
 
   return (
-    <main className="min-h-screen bg-zinc-100 px-4 py-8">
+    <main className="min-h-screen bg-orange-50 px-4 py-8 text-zinc-900">
       <div className="mx-auto max-w-7xl">
         <div className="rounded-3xl bg-white p-6 shadow">
           <p className="font-semibold text-orange-700">श्री हरिवंश</p>
 
           <div className="mt-1 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold">
-                Diksha Team Attendance Admin
-              </h1>
+            <h1 className="text-3xl font-extrabold text-zinc-900">
+  Diksha Team Attendance Admin
+</h1>
               <p className="mt-2 text-sm text-zinc-600">
                 {viewMode === "ALL"
                   ? "Showing all attendance records"
@@ -198,7 +198,7 @@ export default async function AdminPage({
         </div>
 
         <div className="mt-6 rounded-3xl bg-white p-6 shadow">
-          <h2 className="text-xl font-bold">WhatsApp Summary</h2>
+        <h2 className="text-xl font-extrabold text-zinc-900">WhatsApp Summary</h2>
           <p className="mt-1 text-sm text-zinc-500">
             Is message ko copy karke WhatsApp group me bhej sakte ho.
           </p>
@@ -208,7 +208,7 @@ export default async function AdminPage({
           </pre>
         </div>
 
-        <div className="mt-6 overflow-x-auto rounded-3xl bg-white shadow">
+        <div className="mt-6 overflow-x-auto rounded-3xl bg-white text-zinc-900 shadow">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-zinc-900 text-white">
               <tr>
@@ -298,13 +298,13 @@ export default async function AdminPage({
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-2xl bg-orange-50 p-4">
-      <p className="text-sm font-medium text-orange-800">{label}</p>
-      <p className="mt-1 text-3xl font-bold">{value}</p>
-    </div>
-  );
-}
+    return (
+      <div className="rounded-2xl border border-orange-100 bg-orange-50 p-4 shadow-sm">
+        <p className="text-sm font-bold text-orange-800">{label}</p>
+        <p className="mt-1 text-3xl font-extrabold text-zinc-900">{value}</p>
+      </div>
+    );
+  }
 
 function StatusBadge({ status }: { status: string }) {
   const label =
