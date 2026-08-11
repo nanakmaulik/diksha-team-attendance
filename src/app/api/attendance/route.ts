@@ -107,16 +107,7 @@ export async function POST(request: NextRequest) {
       }
       
       // STRICT LOCATION BLOCK — yahi paste karna hai
-      if (locationStatus === "OUTSIDE_LOCATION") {
-        return NextResponse.json(
-          {
-            ok: false,
-            error: `Aap Diksha seva location ke allowed ${allowedRadiusMeters} meter radius ke bahar hain. Attendance mark nahi ho sakti.`,
-            distanceMeters: distanceFromCenterMeters,
-          },
-          { status: 403 }
-        );
-      }
+     
       
       if (locationStatus === "LOW_ACCURACY") {
         return NextResponse.json(
@@ -173,11 +164,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      ok: true,
-      attendance: data,
-      status: locationStatus,
-      distanceMeters: distanceFromCenterMeters,
-    });
+        ok: true,
+        message: "Attendance recorded successfully.",
+      });
   } catch (error) {
     return NextResponse.json(
       {

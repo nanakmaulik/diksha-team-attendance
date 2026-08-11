@@ -117,24 +117,9 @@ export default function AttendancePage() {
           return;
         }
 
-        const distanceText =
-          result.distanceMeters === null
-            ? "Center location configure nahi hai."
-            : `Distance from seva location: ${result.distanceMeters} meters`;
-
-        const statusText =
-          result.status === "VALID"
-            ? "✅ Valid Location"
-            : result.status === "OUTSIDE_LOCATION"
-            ? "⚠️ Outside Seva Location"
-            : result.status === "LOW_ACCURACY"
-            ? "⚠️ Low GPS Accuracy"
-            : "⚠️ Center Not Configured";
-
         setStatus({
           type: "success",
-          message: "Radhe Radhe 🙏 Attendance record ho gayi.",
-          details: `${statusText}\n${distanceText}`,
+          message: "Radhe Radhe 🙏 Aapki attendance record ho gayi hai.",
         });
       },
       () => {
