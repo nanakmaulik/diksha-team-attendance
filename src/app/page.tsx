@@ -20,6 +20,10 @@ export default function AttendancePage() {
   const [otherName, setOtherName] = useState("");
   const [sevaType, setSevaType] = useState("");
   const [department, setDepartment] = useState("Diksha");
+  const [attendanceType, setAttendanceType] = useState<"PRESENT" | "LEAVE">(
+    "PRESENT"
+  );
+  const [leaveReason, setLeaveReason] = useState("");
   const [status, setStatus] = useState<SubmitStatus>({
     type: "idle",
     message: "",
@@ -46,11 +50,6 @@ export default function AttendancePage() {
   }
 
   async function submitAttendance() {
-    setStatus({
-      type: "loading",
-      message: "Location permission maang rahe hain...",
-    });
-
     if (!sadhakName) {
       setStatus({
         type: "error",
@@ -58,7 +57,7 @@ export default function AttendancePage() {
       });
       return;
     }
-
+  
     if (sadhakName === "Others" && !otherName.trim()) {
       setStatus({
         type: "error",
@@ -66,7 +65,7 @@ export default function AttendancePage() {
       });
       return;
     }
-
+  
     if (!sevaType) {
       setStatus({
         type: "error",
@@ -74,7 +73,52 @@ export default function AttendancePage() {
       });
       return;
     }
-
+  
+    if (attendanceType === "LEAVE") {
+      setStatus({
+        type: "loading",
+        message: "Leave save ho rahi hai...",
+      });
+  
+      const response = await fetch("/api/attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sadhakId,
+          sadhakName,
+          otherName,
+          sevaType,
+          department,
+          attendanceType: "LEAVE",
+          leaveReason,
+        }),
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok || !result.ok) {
+        setStatus({
+          type: "error",
+          message: result.error || "Leave save nahi hui.",
+        });
+        return;
+      }
+  
+      setStatus({
+        type: "success",
+        message: "Radhe Radhe 🙏 Aapki leave record ho gayi hai.",
+      });
+  
+      return;
+    }
+  
+    setStatus({
+      type: "loading",
+      message: "Location permission maang rahe hain...",
+    });
+  
     if (!navigator.geolocation) {
       setStatus({
         type: "error",
@@ -82,14 +126,14 @@ export default function AttendancePage() {
       });
       return;
     }
-
+  
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         setStatus({
           type: "loading",
           message: "Attendance save ho rahi hai...",
         });
-
+  
         const response = await fetch("/api/attendance", {
           method: "POST",
           headers: {
@@ -101,14 +145,15 @@ export default function AttendancePage() {
             otherName,
             sevaType,
             department,
+            attendanceType: "PRESENT",
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
             accuracyMeters: position.coords.accuracy,
           }),
         });
-
+  
         const result = await response.json();
-
+  
         if (!response.ok || !result.ok) {
           setStatus({
             type: "error",
@@ -116,7 +161,7 @@ export default function AttendancePage() {
           });
           return;
         }
-
+  
         setStatus({
           type: "success",
           message: "Radhe Radhe 🙏 Aapki attendance record ho gayi hai.",
@@ -210,6 +255,49 @@ export default function AttendancePage() {
           </label>
 
           <label className="block">
+  <span className="text-sm font-semibold">Response Type</span>
+
+  <div className="mt-2 grid grid-cols-2 gap-3">
+    <button
+      type="button"
+      onClick={() => setAttendanceType("PRESENT")}
+      className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
+        attendanceType === "PRESENT"
+          ? "border-green-700 bg-green-700 text-white"
+          : "border-zinc-300 bg-white text-zinc-800"
+      }`}
+    >
+      Mark Present
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setAttendanceType("LEAVE")}
+      className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
+        attendanceType === "LEAVE"
+          ? "border-yellow-600 bg-yellow-500 text-white"
+          : "border-zinc-300 bg-white text-zinc-800"
+      }`}
+    >
+      Mark Leave
+    </button>
+  </div>
+</label>
+
+{attendanceType === "LEAVE" && (
+  <label className="block">
+    <span className="text-sm font-semibold">Leave Reason</span>
+    <textarea
+      value={leaveReason}
+      onChange={(event) => setLeaveReason(event.target.value)}
+      className="mt-2 w-full rounded-xl border border-zinc-300 px-4 py-3"
+      placeholder="Permission / leave reason likhein"
+      rows={3}
+    />
+  </label>
+)}
+
+          <label className="block">
             <span className="text-sm font-semibold">Department</span>
             <select
               value={department}
@@ -225,7 +313,11 @@ export default function AttendancePage() {
             disabled={status.type === "loading"}
             className="w-full rounded-2xl bg-orange-700 px-5 py-4 text-lg font-bold text-white shadow-lg disabled:opacity-60"
           >
-            {status.type === "loading" ? "Please wait..." : "Mark Present"}
+            {status.type === "loading"
+  ? "Please wait..."
+  : attendanceType === "LEAVE"
+    ? "Submit Leave"
+    : "Mark Present"}
           </button>
 
           {status.message && (

@@ -77,21 +77,36 @@ export default async function AdminPage({
   const { data, error } = await query;
 
   const rows = data ?? [];
+  const { data: sadhakData } = await supabaseAdmin
+  .from("sadhaks")
+  .select("name")
+  .eq("active", true)
+  .order("sort_order", { ascending: true })
+  .order("name", { ascending: true });
 
-  const morning = rows.filter((row) => row.seva_type === "Morning Seva");
-  const evening = rows.filter((row) => row.seva_type === "Evening Seva");
-  const valid = rows.filter((row) => row.location_status === "VALID");
-  const outside = rows.filter(
-    (row) => row.location_status === "OUTSIDE_LOCATION"
-  );
-  const lowAccuracy = rows.filter(
-    (row) => row.location_status === "LOW_ACCURACY"
-  );
+const activeNames = (sadhakData ?? []).map((sadhak) => sadhak.name);
 
-  const summaryMessage = buildSummaryMessage({
-    selectedDate,
-    rows,
-  });
+const isLeaveRow = (row: { attendance_type?: string; location_status: string }) =>
+  row.attendance_type === "LEAVE" || row.location_status === "LEAVE";
+
+const presentRows = rows.filter((row) => !isLeaveRow(row));
+const leaveRows = rows.filter((row) => isLeaveRow(row));
+
+const morning = presentRows.filter((row) => row.seva_type === "Morning Seva");
+const evening = presentRows.filter((row) => row.seva_type === "Evening Seva");
+const valid = presentRows.filter((row) => row.location_status === "VALID");
+const outside = presentRows.filter(
+  (row) => row.location_status === "OUTSIDE_LOCATION"
+);
+const lowAccuracy = presentRows.filter(
+  (row) => row.location_status === "LOW_ACCURACY"
+);
+
+const summaryMessage = buildSummaryMessage({
+  selectedDate,
+  rows,
+  activeNames,
+});
 
   return (
     <main className="min-h-screen bg-orange-50 px-4 py-8 text-zinc-900">
@@ -183,14 +198,15 @@ export default async function AdminPage({
             </button>
           </form>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-6">
-            <Stat label="Total" value={rows.length} />
-            <Stat label="Morning" value={morning.length} />
-            <Stat label="Evening" value={evening.length} />
-            <Stat label="Valid" value={valid.length} />
-            <Stat label="Outside" value={outside.length} />
-            <Stat label="Low Accuracy" value={lowAccuracy.length} />
-          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-7">
+  <Stat label="Total" value={rows.length} />
+  <Stat label="Present" value={presentRows.length} />
+  <Stat label="Leave" value={leaveRows.length} />
+  <Stat label="Morning" value={morning.length} />
+  <Stat label="Evening" value={evening.length} />
+  <Stat label="Outside" value={outside.length} />
+  <Stat label="Low Accuracy" value={lowAccuracy.length} />
+</div>
         </div>
 
         <CopyWhatsAppSummary message={summaryMessage} />
@@ -293,104 +309,168 @@ function Stat({ label, value }: { label: string; value: number }) {
     );
   }
 
-function StatusBadge({ status }: { status: string }) {
-  const label =
-    status === "VALID"
-      ? "Valid"
-      : status === "OUTSIDE_LOCATION"
-      ? "Outside"
-      : status === "LOW_ACCURACY"
-      ? "Low Accuracy"
-      : "No Center";
-
-  const className =
-    status === "VALID"
-      ? "bg-green-100 text-green-800"
-      : status === "OUTSIDE_LOCATION"
-        ? "bg-red-100 text-red-800"
-        : "bg-yellow-100 text-yellow-800";
-
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-bold ${className}`}>
-      {label}
-    </span>
-  );
-}
-
-function buildSummaryMessage({
-  selectedDate,
-  rows,
-}: {
-  selectedDate: string;
-  rows: Array<{
-    final_name: string;
-    seva_type: string;
-    submitted_at: string;
-    location_status: string;
-  }>;
-}) {
-  const morningRows = rows
-    .filter((row) => row.seva_type === "Morning Seva")
-    .sort(
-      (a, b) =>
-        new Date(a.submitted_at).getTime() -
-        new Date(b.submitted_at).getTime()
+  function StatusBadge({ status }: { status: string }) {
+    const label =
+      status === "VALID"
+        ? "Valid"
+        : status === "OUTSIDE_LOCATION"
+          ? "Outside"
+          : status === "LOW_ACCURACY"
+            ? "Low Accuracy"
+            : status === "LEAVE"
+              ? "Leave"
+              : "No Center";
+  
+    const className =
+      status === "VALID"
+        ? "bg-green-100 text-green-800"
+        : status === "OUTSIDE_LOCATION"
+          ? "bg-red-100 text-red-800"
+          : status === "LEAVE"
+            ? "bg-yellow-100 text-yellow-800"
+            : "bg-orange-100 text-orange-800";
+  
+    return (
+      <span className={`rounded-full px-3 py-1 text-xs font-bold ${className}`}>
+        {label}
+      </span>
     );
+  }
 
-  const eveningRows = rows
-    .filter((row) => row.seva_type === "Evening Seva")
-    .sort(
-      (a, b) =>
-        new Date(a.submitted_at).getTime() -
-        new Date(b.submitted_at).getTime()
-    );
-
-  const formatTime = (dateValue: string) =>
-    new Date(dateValue).toLocaleTimeString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-  const statusIcon = (status: string) => {
-    if (status === "VALID") return "✅";
-    if (status === "OUTSIDE_LOCATION") return "⚠️";
-    if (status === "LOW_ACCURACY") return "📍";
-    return "ℹ️";
-  };
-
-  const makeNameLines = (
-    records: Array<{
+  function buildSummaryMessage({
+    selectedDate,
+    rows,
+    activeNames,
+  }: {
+    selectedDate: string;
+    activeNames: string[];
+    rows: Array<{
       final_name: string;
+      seva_type: string;
       submitted_at: string;
       location_status: string;
-    }>
-  ) => {
-    if (records.length === 0) {
-      return ["No attendance marked."];
-    }
-
-    return records.map((row, index) => {
-      return `${index + 1}. ${row.final_name} — ${formatTime(
-        row.submitted_at
-      )} ${statusIcon(row.location_status)}`;
-    });
-  };
-
-  return [
-    "🙏 श्री हरिवंश 🙏",
-    "",
-    "📋 *Diksha Team Attendance Summary*",
-    `📅 Date: ${selectedDate}`,
-    "",
-    `✅ Total Attendance: ${rows.length}`,
-    `🌅 Morning Seva: ${morningRows.length}`,
-    `🌙 Evening Seva: ${eveningRows.length}`,
-    "",
-    "🌅 *Morning Seva Attendance*",
-    ...makeNameLines(morningRows),
-    "",
-    "🌙 *Evening Seva Attendance*",
-    ...makeNameLines(eveningRows),
-  ].join("\n");
-}
+      attendance_type?: string;
+      leave_reason?: string | null;
+    }>;
+  }) {
+    const normalizeName = (name: string) =>
+      name.trim().toLowerCase().replace(/\s+/g, " ");
+  
+    const isLeaveRow = (row: {
+      attendance_type?: string;
+      location_status: string;
+    }) => row.attendance_type === "LEAVE" || row.location_status === "LEAVE";
+  
+    const formatTime = (dateValue: string) =>
+      new Date(dateValue).toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+  
+    const getBreakdown = (sevaType: "Morning Seva" | "Evening Seva") => {
+      const sevaRows = rows.filter((row) => row.seva_type === sevaType);
+  
+      const present = sevaRows
+        .filter((row) => !isLeaveRow(row))
+        .sort(
+          (a, b) =>
+            new Date(a.submitted_at).getTime() -
+            new Date(b.submitted_at).getTime()
+        );
+  
+      const leave = sevaRows
+        .filter((row) => isLeaveRow(row))
+        .sort(
+          (a, b) =>
+            new Date(a.submitted_at).getTime() -
+            new Date(b.submitted_at).getTime()
+        );
+  
+      const markedNames = new Set(
+        sevaRows.map((row) => normalizeName(row.final_name))
+      );
+  
+      const absent = activeNames.filter(
+        (name) => !markedNames.has(normalizeName(name))
+      );
+  
+      return {
+        present,
+        leave,
+        absent,
+      };
+    };
+  
+    const makePresentLines = (
+      records: Array<{ final_name: string; submitted_at: string }>
+    ) => {
+      if (records.length === 0) return ["No present attendance marked."];
+  
+      return records.map(
+        (row, index) =>
+          `${index + 1}. ${row.final_name} — ${formatTime(row.submitted_at)}`
+      );
+    };
+  
+    const makeLeaveLines = (
+      records: Array<{
+        final_name: string;
+        submitted_at: string;
+        leave_reason?: string | null;
+      }>
+    ) => {
+      if (records.length === 0) return ["No leave marked."];
+  
+      return records.map((row, index) => {
+        const reason = row.leave_reason ? ` — ${row.leave_reason}` : "";
+        return `${index + 1}. ${row.final_name} — ${formatTime(
+          row.submitted_at
+        )}${reason}`;
+      });
+    };
+  
+    const makeAbsentLines = (names: string[]) => {
+      if (names.length === 0) return ["No absent sadhaks."];
+  
+      return names.map((name, index) => `${index + 1}. ${name}`);
+    };
+  
+    const morning = getBreakdown("Morning Seva");
+    const evening = getBreakdown("Evening Seva");
+  
+    return [
+      "🙏 श्री हरिवंश 🙏",
+      "",
+      "📋 *Diksha Team Attendance Summary*",
+      `📅 Date: ${selectedDate}`,
+      "",
+      "🌅 *Morning Seva*",
+      `✅ Present: ${morning.present.length}`,
+      `🟡 Leave: ${morning.leave.length}`,
+      `❌ Absent: ${morning.absent.length}`,
+      "",
+      "✅ *Morning Present List*",
+      ...makePresentLines(morning.present),
+      "",
+      "🟡 *Morning Leave List*",
+      ...makeLeaveLines(morning.leave),
+      "",
+      "❌ *Morning Absent List*",
+      ...makeAbsentLines(morning.absent),
+      "",
+      "🌙 *Evening Seva*",
+      `✅ Present: ${evening.present.length}`,
+      `🟡 Leave: ${evening.leave.length}`,
+      `❌ Absent: ${evening.absent.length}`,
+      "",
+      "✅ *Evening Present List*",
+      ...makePresentLines(evening.present),
+      "",
+      "🟡 *Evening Leave List*",
+      ...makeLeaveLines(evening.leave),
+      "",
+      "❌ *Evening Absent List*",
+      ...makeAbsentLines(evening.absent),
+    ].join("\n");
+  }

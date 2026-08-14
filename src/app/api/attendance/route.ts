@@ -8,6 +8,8 @@ type AttendancePayload = {
   otherName?: string;
   sevaType?: "Morning Seva" | "Evening Seva";
   department?: string;
+  attendanceType?: "PRESENT" | "LEAVE";
+  leaveReason?: string;
   latitude?: number;
   longitude?: number;
   accuracyMeters?: number;
@@ -31,25 +33,15 @@ export async function POST(request: NextRequest) {
     const sevaType = cleanText(body.sevaType) as
       | "Morning Seva"
       | "Evening Seva";
-    const department = cleanText(body.department) || "Diksha";
 
-    const latitude = Number(body.latitude);
-    const longitude = Number(body.longitude);
-    const accuracyMeters =
-      body.accuracyMeters === undefined
-        ? null
-        : Number(body.accuracyMeters);
+    const department = cleanText(body.department) || "Diksha";
+    const attendanceType =
+      body.attendanceType === "LEAVE" ? "LEAVE" : "PRESENT";
+    const leaveReason = cleanText(body.leaveReason);
 
     if (!sevaType || !["Morning Seva", "Evening Seva"].includes(sevaType)) {
       return NextResponse.json(
         { ok: false, error: "Please select Morning Seva or Evening Seva." },
-        { status: 400 }
-      );
-    }
-
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      return NextResponse.json(
-        { ok: false, error: "Location is required to mark attendance." },
         { status: 400 }
       );
     }
@@ -74,25 +66,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const centerLat = Number(process.env.SEVA_CENTER_LAT);
-    const centerLng = Number(process.env.SEVA_CENTER_LNG);
-    const allowedRadiusMeters = Number(
-      process.env.ALLOWED_RADIUS_METERS || 150
-    );
-    const maxAccuracyMeters = Number(process.env.MAX_ACCURACY_METERS || 120);
-
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    let accuracyMeters: number | null = null;
     let distanceFromCenterMeters: number | null = null;
+
     let locationStatus:
       | "VALID"
       | "OUTSIDE_LOCATION"
       | "LOW_ACCURACY"
-      | "CENTER_NOT_CONFIGURED" = "CENTER_NOT_CONFIGURED";
+      | "CENTER_NOT_CONFIGURED"
+      | "LEAVE" = "CENTER_NOT_CONFIGURED";
+
+    if (attendanceType === "LEAVE") {
+      locationStatus = "LEAVE";
+    } else {
+      latitude = Number(body.latitude);
+      longitude = Number(body.longitude);
+      accuracyMeters =
+        body.accuracyMeters === undefined
+          ? null
+          : Number(body.accuracyMeters);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        return NextResponse.json(
+          { ok: false, error: "Location is required to mark attendance." },
+          { status: 400 }
+        );
+      }
+
+      const centerLat = Number(process.env.SEVA_CENTER_LAT);
+      const centerLng = Number(process.env.SEVA_CENTER_LNG);
+      const allowedRadiusMeters = Number(
+        process.env.ALLOWED_RADIUS_METERS || 150
+      );
+      const maxAccuracyMeters = Number(process.env.MAX_ACCURACY_METERS || 150);
 
       if (Number.isFinite(centerLat) && Number.isFinite(centerLng)) {
         distanceFromCenterMeters = Math.round(
           getDistanceMeters(centerLat, centerLng, latitude, longitude)
         );
-      
+
         if (
           accuracyMeters !== null &&
           Number.isFinite(accuracyMeters) &&
@@ -105,23 +119,9 @@ export async function POST(request: NextRequest) {
           locationStatus = "VALID";
         }
       }
-      
-      // STRICT LOCATION BLOCK — yahi paste karna hai
-     
-      
-      if (locationStatus === "LOW_ACCURACY") {
-        return NextResponse.json(
-          {
-            ok: false,
-            error:
-              "GPS accuracy weak hai. Kripya location/GPS on karke open area me khade hokar dobara try karein.",
-            distanceMeters: distanceFromCenterMeters,
-          },
-          { status: 403 }
-        );
-      }
-      
-      const attendanceDate = getIndiaDateKey();
+    }
+
+    const attendanceDate = getIndiaDateKey();
     const finalNameKey = normalizeKey(finalName);
 
     const { data, error } = await supabaseAdmin
@@ -135,6 +135,8 @@ export async function POST(request: NextRequest) {
         final_name_key: finalNameKey,
         seva_type: sevaType,
         department,
+        attendance_type: attendanceType,
+        leave_reason: attendanceType === "LEAVE" ? leaveReason || null : null,
         latitude,
         longitude,
         accuracy_meters: accuracyMeters,
@@ -151,7 +153,7 @@ export async function POST(request: NextRequest) {
           {
             ok: false,
             error:
-              "Aapki attendance is seva ke liye aaj already mark ho chuki hai.",
+              "Aaj is seva ke liye aapka response already submit ho chuka hai.",
           },
           { status: 409 }
         );
@@ -164,9 +166,13 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-        ok: true,
-        message: "Attendance recorded successfully.",
-      });
+      ok: true,
+      message:
+        attendanceType === "LEAVE"
+          ? "Leave recorded successfully."
+          : "Attendance recorded successfully.",
+      record: data,
+    });
   } catch (error) {
     return NextResponse.json(
       {
