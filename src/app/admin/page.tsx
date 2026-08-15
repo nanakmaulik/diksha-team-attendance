@@ -368,48 +368,53 @@ function Stat({ label, value }: { label: string; value: number }) {
         minute: "2-digit",
       });
   
-    const getBreakdown = (sevaType: "Morning Seva" | "Evening Seva") => {
-      const sevaRows = rows.filter((row) => row.seva_type === sevaType);
-  
-      const present = sevaRows
-        .filter((row) => !isLeaveRow(row))
-        .sort(
-          (a, b) =>
-            new Date(a.submitted_at).getTime() -
-            new Date(b.submitted_at).getTime()
-        );
-  
-      const leave = sevaRows
-        .filter((row) => isLeaveRow(row))
-        .sort(
-          (a, b) =>
-            new Date(a.submitted_at).getTime() -
-            new Date(b.submitted_at).getTime()
-        );
-  
-      const markedNames = new Set(
-        sevaRows.map((row) => normalizeName(row.final_name))
-      );
-  
-      const absent = activeNames.filter(
-        (name) => !markedNames.has(normalizeName(name))
-      );
-  
-      return {
-        present,
-        leave,
-        absent,
-      };
+    const statusIcon = (status: string) => {
+      if (status === "VALID") return "✅";
+      if (status === "OUTSIDE_LOCATION") return "⚠️";
+      if (status === "LOW_ACCURACY") return "📍";
+      return "ℹ️";
     };
   
+    const morningRows = rows.filter((row) => row.seva_type === "Morning Seva");
+  
+    const present = morningRows
+      .filter((row) => !isLeaveRow(row))
+      .sort(
+        (a, b) =>
+          new Date(a.submitted_at).getTime() -
+          new Date(b.submitted_at).getTime()
+      );
+  
+    const leave = morningRows
+      .filter((row) => isLeaveRow(row))
+      .sort(
+        (a, b) =>
+          new Date(a.submitted_at).getTime() -
+          new Date(b.submitted_at).getTime()
+      );
+  
+    const markedNames = new Set(
+      morningRows.map((row) => normalizeName(row.final_name))
+    );
+  
+    const absent = activeNames.filter(
+      (name) => !markedNames.has(normalizeName(name))
+    );
+  
     const makePresentLines = (
-      records: Array<{ final_name: string; submitted_at: string }>
+      records: Array<{
+        final_name: string;
+        submitted_at: string;
+        location_status: string;
+      }>
     ) => {
       if (records.length === 0) return ["No present attendance marked."];
   
       return records.map(
         (row, index) =>
-          `${index + 1}. ${row.final_name} — ${formatTime(row.submitted_at)}`
+          `${index + 1}. ${row.final_name} — ${formatTime(
+            row.submitted_at
+          )} ${statusIcon(row.location_status)}`
       );
     };
   
@@ -436,9 +441,6 @@ function Stat({ label, value }: { label: string; value: number }) {
       return names.map((name, index) => `${index + 1}. ${name}`);
     };
   
-    const morning = getBreakdown("Morning Seva");
-    const evening = getBreakdown("Evening Seva");
-  
     return [
       "🙏 श्री हरिवंश 🙏",
       "",
@@ -446,31 +448,19 @@ function Stat({ label, value }: { label: string; value: number }) {
       `📅 Date: ${selectedDate}`,
       "",
       "🌅 *Morning Seva*",
-      `✅ Present: ${morning.present.length}`,
-      `🟡 Leave: ${morning.leave.length}`,
-      `❌ Absent: ${morning.absent.length}`,
+      `✅ Present: ${present.length}`,
+      `🟡 Leave: ${leave.length}`,
+      `❌ Absent: ${absent.length}`,
       "",
       "✅ *Morning Present List*",
-      ...makePresentLines(morning.present),
+      ...makePresentLines(present),
       "",
       "🟡 *Morning Leave List*",
-      ...makeLeaveLines(morning.leave),
+      ...makeLeaveLines(leave),
       "",
       "❌ *Morning Absent List*",
-      ...makeAbsentLines(morning.absent),
+      ...makeAbsentLines(absent),
       "",
-      "🌙 *Evening Seva*",
-      `✅ Present: ${evening.present.length}`,
-      `🟡 Leave: ${evening.leave.length}`,
-      `❌ Absent: ${evening.absent.length}`,
-      "",
-      "✅ *Evening Present List*",
-      ...makePresentLines(evening.present),
-      "",
-      "🟡 *Evening Leave List*",
-      ...makeLeaveLines(evening.leave),
-      "",
-      "❌ *Evening Absent List*",
-      ...makeAbsentLines(evening.absent),
+      "✅ = Valid | ⚠️ = Outside | 📍 = Low GPS Accuracy",
     ].join("\n");
   }
