@@ -3,8 +3,10 @@
 import { useState } from "react";
 
 export default function CopyWhatsAppSummary({
+  title = "WhatsApp Summary",
   message,
 }: {
+  title?: string;
   message: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -42,7 +44,7 @@ export default function CopyWhatsAppSummary({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-extrabold text-zinc-900">
-            WhatsApp Summary
+          {title}
           </h2>
           <p className="mt-1 text-sm text-zinc-500">
             Is message ko copy karke WhatsApp group me bhej sakte ho.

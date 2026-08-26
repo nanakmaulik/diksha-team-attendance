@@ -79,12 +79,16 @@ export default async function AdminPage({
   const rows = data ?? [];
   const { data: sadhakData } = await supabaseAdmin
   .from("sadhaks")
-  .select("name")
+  .select("id, name, attendance_group")
   .eq("active", true)
   .order("sort_order", { ascending: true })
   .order("name", { ascending: true });
 
-const activeNames = (sadhakData ?? []).map((sadhak) => sadhak.name);
+const activeSadhaks = (sadhakData ?? []).map((sadhak) => ({
+  id: sadhak.id as string,
+  name: sadhak.name as string,
+  attendance_group: (sadhak.attendance_group || "MALE") as "MALE" | "FEMALE",
+}));
 
 const isLeaveRow = (row: { attendance_type?: string; location_status: string }) =>
   row.attendance_type === "LEAVE" || row.location_status === "LEAVE";
@@ -102,10 +106,20 @@ const lowAccuracy = presentRows.filter(
   (row) => row.location_status === "LOW_ACCURACY"
 );
 
-const summaryMessage = buildSummaryMessage({
+const babaSummaryMessage = buildGroupSummaryMessage({
   selectedDate,
   rows,
-  activeNames,
+  activeSadhaks,
+  group: "MALE",
+  title: "Baba Log Attendance Summary",
+});
+
+const mataSummaryMessage = buildGroupSummaryMessage({
+  selectedDate,
+  rows,
+  activeSadhaks,
+  group: "FEMALE",
+  title: "Matayen Attendance Summary",
 });
 
   return (
@@ -209,7 +223,17 @@ const summaryMessage = buildSummaryMessage({
 </div>
         </div>
 
-        <CopyWhatsAppSummary message={summaryMessage} />
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+  <CopyWhatsAppSummary
+    title="Baba Log WhatsApp Message"
+    message={babaSummaryMessage}
+  />
+
+  <CopyWhatsAppSummary
+    title="Matayen WhatsApp Message"
+    message={mataSummaryMessage}
+  />
+</div>
 
         <div className="mt-6 overflow-x-auto rounded-3xl bg-white text-zinc-900 shadow">
           <table className="min-w-full text-left text-sm">
@@ -337,14 +361,23 @@ function Stat({ label, value }: { label: string; value: number }) {
     );
   }
 
-  function buildSummaryMessage({
+  function buildGroupSummaryMessage({
     selectedDate,
     rows,
-    activeNames,
+    activeSadhaks,
+    group,
+    title,
   }: {
     selectedDate: string;
-    activeNames: string[];
+    group: "MALE" | "FEMALE";
+    title: string;
+    activeSadhaks: Array<{
+      id: string;
+      name: string;
+      attendance_group: "MALE" | "FEMALE";
+    }>;
     rows: Array<{
+      sadhak_id?: string | null;
       final_name: string;
       seva_type: string;
       submitted_at: string;
@@ -356,10 +389,36 @@ function Stat({ label, value }: { label: string; value: number }) {
     const normalizeName = (name: string) =>
       name.trim().toLowerCase().replace(/\s+/g, " ");
   
+    const activeGroupSadhaks = activeSadhaks.filter(
+      (sadhak) => sadhak.attendance_group === group
+    );
+  
+    const activeNameToGroup = new Map(
+      activeSadhaks.map((sadhak) => [
+        normalizeName(sadhak.name),
+        sadhak.attendance_group,
+      ])
+    );
+  
+    const activeIdToGroup = new Map(
+      activeSadhaks.map((sadhak) => [sadhak.id, sadhak.attendance_group])
+    );
+  
     const isLeaveRow = (row: {
       attendance_type?: string;
       location_status: string;
     }) => row.attendance_type === "LEAVE" || row.location_status === "LEAVE";
+  
+    const getRowGroup = (row: {
+      sadhak_id?: string | null;
+      final_name: string;
+    }) => {
+      if (row.sadhak_id && activeIdToGroup.has(row.sadhak_id)) {
+        return activeIdToGroup.get(row.sadhak_id);
+      }
+  
+      return activeNameToGroup.get(normalizeName(row.final_name)) || "MALE";
+    };
   
     const formatTime = (dateValue: string) =>
       new Date(dateValue).toLocaleTimeString("en-IN", {
@@ -375,7 +434,9 @@ function Stat({ label, value }: { label: string; value: number }) {
       return "ℹ️";
     };
   
-    const morningRows = rows.filter((row) => row.seva_type === "Morning Seva");
+    const morningRows = rows.filter(
+      (row) => row.seva_type === "Morning Seva" && getRowGroup(row) === group
+    );
   
     const present = morningRows
       .filter((row) => !isLeaveRow(row))
@@ -397,9 +458,9 @@ function Stat({ label, value }: { label: string; value: number }) {
       morningRows.map((row) => normalizeName(row.final_name))
     );
   
-    const absent = activeNames.filter(
-      (name) => !markedNames.has(normalizeName(name))
-    );
+    const absent = activeGroupSadhaks
+      .map((sadhak) => sadhak.name)
+      .filter((name) => !markedNames.has(normalizeName(name)));
   
     const makePresentLines = (
       records: Array<{
@@ -444,7 +505,7 @@ function Stat({ label, value }: { label: string; value: number }) {
     return [
       "🙏 श्री हरिवंश 🙏",
       "",
-      "📋 *Diksha Team Attendance Summary*",
+      `📋 *${title}*`,
       `📅 Date: ${selectedDate}`,
       "",
       "🌅 *Morning Seva*",
@@ -452,13 +513,13 @@ function Stat({ label, value }: { label: string; value: number }) {
       `🟡 Leave: ${leave.length}`,
       `❌ Absent: ${absent.length}`,
       "",
-      "✅ *Morning Present List*",
+      "✅ *Present List*",
       ...makePresentLines(present),
       "",
-      "🟡 *Morning Leave List*",
+      "🟡 *Leave List*",
       ...makeLeaveLines(leave),
       "",
-      "❌ *Morning Absent List*",
+      "❌ *Absent List*",
       ...makeAbsentLines(absent),
       "",
       "✅ = Valid | ⚠️ = Outside | 📍 = Low GPS Accuracy",
