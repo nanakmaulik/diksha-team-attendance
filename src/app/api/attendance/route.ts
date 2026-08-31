@@ -95,12 +95,27 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const centerLat = Number(process.env.SEVA_CENTER_LAT);
-      const centerLng = Number(process.env.SEVA_CENTER_LNG);
-      const allowedRadiusMeters = Number(
-        process.env.ALLOWED_RADIUS_METERS || 150
+      const isParking = department === "Parking";
+
+      const centerLat = Number(
+        isParking ? process.env.PARKING_CENTER_LAT : process.env.SEVA_CENTER_LAT
       );
-      const maxAccuracyMeters = Number(process.env.MAX_ACCURACY_METERS || 150);
+      
+      const centerLng = Number(
+        isParking ? process.env.PARKING_CENTER_LNG : process.env.SEVA_CENTER_LNG
+      );
+      
+      const allowedRadiusMeters = Number(
+        isParking
+          ? process.env.PARKING_ALLOWED_RADIUS_METERS || 100
+          : process.env.ALLOWED_RADIUS_METERS || 150
+      );
+      
+      const maxAccuracyMeters = Number(
+        isParking
+          ? process.env.PARKING_MAX_ACCURACY_METERS || 100
+          : process.env.MAX_ACCURACY_METERS || 150
+      );
 
       if (Number.isFinite(centerLat) && Number.isFinite(centerLng)) {
         distanceFromCenterMeters = Math.round(

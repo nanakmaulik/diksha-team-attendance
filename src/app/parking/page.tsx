@@ -19,7 +19,7 @@ export default function AttendancePage() {
   const [sadhakName, setSadhakName] = useState("");
   const [otherName, setOtherName] = useState("");
   const [sevaType, setSevaType] = useState("");
-  const [department, setDepartment] = useState("Diksha");
+  const [department, setDepartment] = useState("Parking");
   const [attendanceType, setAttendanceType] = useState<"PRESENT" | "LEAVE">(
     "PRESENT"
   );
@@ -31,7 +31,7 @@ export default function AttendancePage() {
 
   useEffect(() => {
     async function loadSadhaks() {
-      const response = await fetch("/api/sadhaks?department=Diksha");
+      const response = await fetch("/api/sadhaks?department=Parking");
       const result = await response.json();
 
       if (result.ok) {
@@ -186,16 +186,16 @@ export default function AttendancePage() {
     <main className="min-h-screen bg-orange-50 px-4 py-8 text-zinc-900">
       <div className="mx-auto max-w-md rounded-3xl bg-white p-6 shadow-xl">
       <div className="mb-5 flex justify-end">
-  <a
-    href="/admin"
-    className="rounded-full bg-zinc-100 px-4 py-2 text-xs font-bold text-zinc-700"
-  >
-    Admin Dashboard
-  </a>
+      <a
+  href="/admin/parking?pin=2580"
+  className="rounded-full bg-zinc-100 px-4 py-2 text-xs font-bold text-zinc-700"
+>
+  Parking Dashboard
+</a>
 </div>
         <div className="text-center">
           <p className="text-lg font-semibold text-orange-700">श्री हरिवंश</p>
-          <h1 className="mt-2 text-3xl font-bold">Diksha Team Attendance</h1>
+          <h1 className="mt-2 text-3xl font-bold">Parking Team Attendance</h1>
           <p className="mt-2 text-sm text-zinc-600">
             Attendance mark karne ke liye location permission allow karna
             zaroori hai.
@@ -304,7 +304,7 @@ export default function AttendancePage() {
               onChange={(event) => setDepartment(event.target.value)}
               className="mt-2 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3"
             >
-              <option value="Diksha">Diksha</option>
+              <option value="Parking">Parking</option>
             </select>
           </label>
 
