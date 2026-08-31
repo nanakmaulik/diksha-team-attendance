@@ -202,7 +202,7 @@ export default function AttendancePage() {
   </a>
 
   <a
-    href="/admin/parking?pin=2580"
+    href="/admin/parking?pin=1175"
     className="rounded-full bg-zinc-100 px-4 py-2 text-xs font-bold text-zinc-700"
   >
     Parking Dashboard
