@@ -25,7 +25,7 @@ export default async function AdminPage({
 }) {
   const params = await Promise.resolve(searchParams);
 
-  const adminPin = process.env.PARKING_ADMIN_PIN || "1175";
+  const adminPin = process.env.PARKING_ADMIN_PIN || "1111";
 
   if (params?.pin !== adminPin) {
     return (
