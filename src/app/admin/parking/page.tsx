@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getIndiaDateKey } from "@/lib/geo";
-import CopyWhatsAppSummary from "../CopyWhatsAppSummary";
+import CopyWhatsAppSummary from "./CopyWhatsAppSummary";
 
 type AdminSearchParams =
   | Promise<{
@@ -108,20 +108,11 @@ const lowAccuracy = presentRows.filter(
   (row) => row.location_status === "LOW_ACCURACY"
 );
 
-const babaSummaryMessage = buildGroupSummaryMessage({
+const parkingSummaryMessage = buildParkingSummaryMessage({
   selectedDate,
   rows,
   activeSadhaks,
-  group: "MALE",
-  title: "Baba Log Attendance Summary",
-});
-
-const mataSummaryMessage = buildGroupSummaryMessage({
-  selectedDate,
-  rows,
-  activeSadhaks,
-  group: "FEMALE",
-  title: "Matayen Attendance Summary",
+  title: "Parking Attendance Summary",
 });
 
   return (
@@ -225,15 +216,10 @@ const mataSummaryMessage = buildGroupSummaryMessage({
 </div>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="mt-6">
   <CopyWhatsAppSummary
-    title="Baba Log WhatsApp Message"
-    message={babaSummaryMessage}
-  />
-
-  <CopyWhatsAppSummary
-    title="Matayen WhatsApp Message"
-    message={mataSummaryMessage}
+    title="Parking WhatsApp Message"
+    message={parkingSummaryMessage}
   />
 </div>
 
@@ -363,15 +349,13 @@ function Stat({ label, value }: { label: string; value: number }) {
     );
   }
 
-  function buildGroupSummaryMessage({
+  function buildParkingSummaryMessage({
     selectedDate,
     rows,
     activeSadhaks,
-    group,
     title,
   }: {
     selectedDate: string;
-    group: "MALE" | "FEMALE";
     title: string;
     activeSadhaks: Array<{
       id: string;
@@ -379,48 +363,22 @@ function Stat({ label, value }: { label: string; value: number }) {
       attendance_group: "MALE" | "FEMALE";
     }>;
     rows: Array<{
-      sadhak_id?: string | null;
       final_name: string;
       seva_type: string;
       submitted_at: string;
       location_status: string;
       attendance_type?: string;
       leave_reason?: string | null;
+      department?: string | null;
     }>;
   }) {
     const normalizeName = (name: string) =>
       name.trim().toLowerCase().replace(/\s+/g, " ");
   
-    const activeGroupSadhaks = activeSadhaks.filter(
-      (sadhak) => sadhak.attendance_group === group
-    );
-  
-    const activeNameToGroup = new Map(
-      activeSadhaks.map((sadhak) => [
-        normalizeName(sadhak.name),
-        sadhak.attendance_group,
-      ])
-    );
-  
-    const activeIdToGroup = new Map(
-      activeSadhaks.map((sadhak) => [sadhak.id, sadhak.attendance_group])
-    );
-  
     const isLeaveRow = (row: {
       attendance_type?: string;
       location_status: string;
     }) => row.attendance_type === "LEAVE" || row.location_status === "LEAVE";
-  
-    const getRowGroup = (row: {
-      sadhak_id?: string | null;
-      final_name: string;
-    }) => {
-      if (row.sadhak_id && activeIdToGroup.has(row.sadhak_id)) {
-        return activeIdToGroup.get(row.sadhak_id);
-      }
-  
-      return activeNameToGroup.get(normalizeName(row.final_name)) || "MALE";
-    };
   
     const formatTime = (dateValue: string) =>
       new Date(dateValue).toLocaleTimeString("en-IN", {
@@ -436,9 +394,7 @@ function Stat({ label, value }: { label: string; value: number }) {
       return "ℹ️";
     };
   
-    const morningRows = rows.filter(
-      (row) => row.seva_type === "Morning Seva" && getRowGroup(row) === group
-    );
+    const morningRows = rows.filter((row) => row.seva_type === "Morning Seva");
   
     const present = morningRows
       .filter((row) => !isLeaveRow(row))
@@ -460,7 +416,7 @@ function Stat({ label, value }: { label: string; value: number }) {
       morningRows.map((row) => normalizeName(row.final_name))
     );
   
-    const absent = activeGroupSadhaks
+    const absent = activeSadhaks
       .map((sadhak) => sadhak.name)
       .filter((name) => !markedNames.has(normalizeName(name)));
   

@@ -58,9 +58,10 @@ export default async function AdminPage({
   const viewMode = params?.view || "TODAY";
 
   let query = supabaseAdmin
-    .from("seva_attendance")
-    .select("*")
-    .order("submitted_at", { ascending: false });
+  .from("seva_attendance")
+  .select("*")
+  .eq("department", "Diksha")
+  .order("submitted_at", { ascending: false });
 
   if (viewMode !== "ALL") {
     query = query.eq("attendance_date", selectedDate);
@@ -81,6 +82,7 @@ export default async function AdminPage({
   .from("sadhaks")
   .select("id, name, attendance_group")
   .eq("active", true)
+  .eq("department", "Diksha")
   .order("sort_order", { ascending: true })
   .order("name", { ascending: true });
 
