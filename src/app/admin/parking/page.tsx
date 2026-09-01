@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getIndiaDateKey } from "@/lib/geo";
-import CopyWhatsAppSummary from "./CopyWhatsAppSummary";
+import CopyWhatsAppSummary from "../CopyWhatsAppSummary";
 
 type AdminSearchParams =
   | Promise<{
