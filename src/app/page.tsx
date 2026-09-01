@@ -195,7 +195,7 @@ export default function AttendancePage() {
       <div className="mb-5 flex justify-end">
       <div className="mb-5 flex justify-end">
   <a
-    href="/admin?pin=1175"
+    href="/admin"
     className="rounded-full bg-zinc-100 px-4 py-2 text-xs font-bold text-zinc-700"
   >
     Admin Dashboard
