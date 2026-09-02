@@ -191,57 +191,57 @@ export default function ManageSadhaks({
         </div>
       )}
 
-      <div className="mt-5 overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-zinc-100 text-zinc-700">
-            <tr>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Mobile</th>
-              {showGroupSelect && <th className="px-4 py-3">Group</th>}
-              <th className="px-4 py-3">Action</th>
-            </tr>
-          </thead>
+<div className="mt-5 max-h-[360px] overflow-auto rounded-2xl border border-zinc-200">
+  <table className="min-w-full text-left text-sm">
+    <thead className="sticky top-0 z-10 bg-zinc-100 text-zinc-700">
+      <tr>
+        <th className="px-4 py-3">Name</th>
+        <th className="px-4 py-3">Mobile</th>
+        {showGroupSelect && <th className="px-4 py-3">Group</th>}
+        <th className="px-4 py-3">Action</th>
+      </tr>
+    </thead>
 
-          <tbody>
-            {sadhaks.map((sadhak) => (
-              <tr key={sadhak.id} className="border-b">
-                <td className="px-4 py-3 font-semibold">{sadhak.name}</td>
-                <td className="px-4 py-3">{sadhak.mobile_number || "-"}</td>
+    <tbody>
+      {sadhaks.map((sadhak) => (
+        <tr key={sadhak.id} className="border-b last:border-b-0">
+          <td className="px-4 py-2.5 font-semibold">{sadhak.name}</td>
+          <td className="px-4 py-2.5">{sadhak.mobile_number || "-"}</td>
 
-                {showGroupSelect && (
-                  <td className="px-4 py-3">
-                    {sadhak.attendance_group === "FEMALE"
-                      ? "Matayen"
-                      : "Baba Log"}
-                  </td>
-                )}
+          {showGroupSelect && (
+            <td className="px-4 py-2.5">
+              {sadhak.attendance_group === "FEMALE"
+                ? "Matayen"
+                : "Baba Log"}
+            </td>
+          )}
 
-                <td className="px-4 py-3">
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={() => deleteSadhak(sadhak)}
-                    className="rounded-lg bg-red-50 px-3 py-2 text-xs font-bold text-red-700 disabled:opacity-60"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+          <td className="px-4 py-2.5">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => deleteSadhak(sadhak)}
+              className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 disabled:opacity-60"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      ))}
 
-            {sadhaks.length === 0 && (
-              <tr>
-                <td
-                  colSpan={showGroupSelect ? 4 : 3}
-                  className="px-4 py-8 text-center text-zinc-500"
-                >
-                  Abhi koi active sadhak nahi hai.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {sadhaks.length === 0 && (
+        <tr>
+          <td
+            colSpan={showGroupSelect ? 4 : 3}
+            className="px-4 py-8 text-center text-zinc-500"
+          >
+            Abhi koi active sadhak nahi hai.
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
     </div>
   );
 }
