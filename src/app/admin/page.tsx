@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getIndiaDateKey } from "@/lib/geo";
 import CopyWhatsAppSummary from "./CopyWhatsAppSummary";
+import ManageSadhaks from "./ManageSadhaks";
 
 type AdminSearchParams =
   | Promise<{
@@ -223,6 +224,11 @@ const mataSummaryMessage = buildGroupSummaryMessage({
   <Stat label="Outside" value={outside.length} />
   <Stat label="Low Accuracy" value={lowAccuracy.length} />
 </div>
+<ManageSadhaks
+  department="Diksha"
+  adminPin={adminPin}
+  showGroupSelect={true}
+/>
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">

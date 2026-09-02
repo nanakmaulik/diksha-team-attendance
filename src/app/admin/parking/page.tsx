@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { getIndiaDateKey } from "@/lib/geo";
 import CopyWhatsAppSummary from "../CopyWhatsAppSummary";
-
+import ManageSadhaks from "../ManageSadhaks";
 type AdminSearchParams =
   | Promise<{
       pin?: string;
@@ -214,6 +214,7 @@ const parkingSummaryMessage = buildParkingSummaryMessage({
   <Stat label="Outside" value={outside.length} />
   <Stat label="Low Accuracy" value={lowAccuracy.length} />
 </div>
+<ManageSadhaks department="Parking" adminPin={adminPin} />
         </div>
 
         <div className="mt-6">
