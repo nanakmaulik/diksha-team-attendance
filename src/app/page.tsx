@@ -116,7 +116,7 @@ export default function AttendancePage() {
   
       setStatus({
         type: "success",
-        message: "Radhe Radhe 🙏 Aapki leave record ho gayi hai.",
+        message: "श्री हरिवंश 🙏 आपकी leave record हो चुकी है.",
       });
   
       return;
@@ -172,7 +172,7 @@ export default function AttendancePage() {
   
         setStatus({
           type: "success",
-          message: "Radhe Radhe 🙏 Aapki attendance record ho gayi hai.",
+          message: "श्री हरिवंश 🙏 आपकी attendance लग चुकी है.",
         });
       },
       () => {
