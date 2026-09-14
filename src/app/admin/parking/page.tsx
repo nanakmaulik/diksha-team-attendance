@@ -180,8 +180,8 @@ const parkingSummaryMessage = buildParkingSummaryMessage({
                 className="mt-1 w-full rounded-xl border bg-white px-3 py-2"
               >
                 <option value="ALL">All</option>
-                <option value="Morning Seva">Morning Seva</option>
-                <option value="Evening Seva">Evening Seva</option>
+                <option value="Morning Seva">RRP Parking</option>
+<option value="Evening Seva">BPP Parking</option>
               </select>
             </label>
 
@@ -209,8 +209,8 @@ const parkingSummaryMessage = buildParkingSummaryMessage({
   <Stat label="Total" value={rows.length} />
   <Stat label="Present" value={presentRows.length} />
   <Stat label="Leave" value={leaveRows.length} />
-  <Stat label="Morning" value={morning.length} />
-  <Stat label="Evening" value={evening.length} />
+  <Stat label="RRP Parking" value={morning.length} />
+  <Stat label="BPP Parking" value={evening.length} />
   <Stat label="Outside" value={outside.length} />
   <Stat label="Low Accuracy" value={lowAccuracy.length} />
 </div>
@@ -260,7 +260,7 @@ const parkingSummaryMessage = buildParkingSummaryMessage({
                       {row.final_name}
                     </td>
 
-                    <td className="px-4 py-3">{row.seva_type}</td>
+                    <td className="px-4 py-3">{displayParkingType(row.seva_type)}</td>
 
                     <td className="px-4 py-3">{row.department}</td>
 
@@ -350,6 +350,12 @@ function Stat({ label, value }: { label: string; value: number }) {
     );
   }
 
+  function displayParkingType(sevaType: string) {
+    if (sevaType === "Morning Seva") return "RRP Parking";
+    if (sevaType === "Evening Seva") return "BPP Parking";
+    return sevaType;
+  }
+
   function buildParkingSummaryMessage({
     selectedDate,
     rows,
@@ -395,31 +401,35 @@ function Stat({ label, value }: { label: string; value: number }) {
       return "ℹ️";
     };
   
-    const morningRows = rows.filter((row) => row.seva_type === "Morning Seva");
+    const getBreakdown = (sevaType: "Morning Seva" | "Evening Seva") => {
+      const sevaRows = rows.filter((row) => row.seva_type === sevaType);
   
-    const present = morningRows
-      .filter((row) => !isLeaveRow(row))
-      .sort(
-        (a, b) =>
-          new Date(a.submitted_at).getTime() -
-          new Date(b.submitted_at).getTime()
+      const present = sevaRows
+        .filter((row) => !isLeaveRow(row))
+        .sort(
+          (a, b) =>
+            new Date(a.submitted_at).getTime() -
+            new Date(b.submitted_at).getTime()
+        );
+  
+      const leave = sevaRows
+        .filter((row) => isLeaveRow(row))
+        .sort(
+          (a, b) =>
+            new Date(a.submitted_at).getTime() -
+            new Date(b.submitted_at).getTime()
+        );
+  
+      const markedNames = new Set(
+        sevaRows.map((row) => normalizeName(row.final_name))
       );
   
-    const leave = morningRows
-      .filter((row) => isLeaveRow(row))
-      .sort(
-        (a, b) =>
-          new Date(a.submitted_at).getTime() -
-          new Date(b.submitted_at).getTime()
-      );
+      const absent = activeSadhaks
+        .map((sadhak) => sadhak.name)
+        .filter((name) => !markedNames.has(normalizeName(name)));
   
-    const markedNames = new Set(
-      morningRows.map((row) => normalizeName(row.final_name))
-    );
-  
-    const absent = activeSadhaks
-      .map((sadhak) => sadhak.name)
-      .filter((name) => !markedNames.has(normalizeName(name)));
+      return { present, leave, absent };
+    };
   
     const makePresentLines = (
       records: Array<{
@@ -461,25 +471,42 @@ function Stat({ label, value }: { label: string; value: number }) {
       return names.map((name, index) => `${index + 1}. ${name}`);
     };
   
+    const rpp = getBreakdown("Morning Seva");
+    const bpp = getBreakdown("Evening Seva");
+  
     return [
       "🙏 श्री हरिवंश 🙏",
       "",
       `📋 *${title}*`,
       `📅 Date: ${selectedDate}`,
       "",
-      "🌅 *Morning Seva*",
-      `✅ Present: ${present.length}`,
-      `🟡 Leave: ${leave.length}`,
-      `❌ Absent: ${absent.length}`,
+      "🅿️ *RPP Parking*",
+      `✅ Present: ${rpp.present.length}`,
+      `🟡 Leave: ${rpp.leave.length}`,
+      `❌ Absent: ${rpp.absent.length}`,
       "",
-      "✅ *Present List*",
-      ...makePresentLines(present),
+      "✅ *RPP Present List*",
+      ...makePresentLines(rpp.present),
       "",
-      "🟡 *Leave List*",
-      ...makeLeaveLines(leave),
+      "🟡 *RPP Leave List*",
+      ...makeLeaveLines(rpp.leave),
       "",
-      "❌ *Absent List*",
-      ...makeAbsentLines(absent),
+      "❌ *RPP Absent List*",
+      ...makeAbsentLines(rpp.absent),
+      "",
+      "🅿️ *BPP Parking*",
+      `✅ Present: ${bpp.present.length}`,
+      `🟡 Leave: ${bpp.leave.length}`,
+      `❌ Absent: ${bpp.absent.length}`,
+      "",
+      "✅ *BPP Present List*",
+      ...makePresentLines(bpp.present),
+      "",
+      "🟡 *BPP Leave List*",
+      ...makeLeaveLines(bpp.leave),
+      "",
+      "❌ *BPP Absent List*",
+      ...makeAbsentLines(bpp.absent),
       "",
       "✅ = Valid | ⚠️ = Outside | 📍 = Low GPS Accuracy",
     ].join("\n");
