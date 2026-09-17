@@ -96,27 +96,39 @@ export async function POST(request: NextRequest) {
       }
 
       const isParking = department === "Parking";
-
+      const isVaniStall = department === "Vani Ji Stall";
+      
       const centerLat = Number(
-        isParking ? process.env.PARKING_CENTER_LAT : process.env.SEVA_CENTER_LAT
+        isVaniStall
+          ? process.env.VANI_STALL_CENTER_LAT
+          : isParking
+            ? process.env.PARKING_CENTER_LAT
+            : process.env.SEVA_CENTER_LAT
       );
       
       const centerLng = Number(
-        isParking ? process.env.PARKING_CENTER_LNG : process.env.SEVA_CENTER_LNG
+        isVaniStall
+          ? process.env.VANI_STALL_CENTER_LNG
+          : isParking
+            ? process.env.PARKING_CENTER_LNG
+            : process.env.SEVA_CENTER_LNG
       );
       
       const allowedRadiusMeters = Number(
-        isParking
-          ? process.env.PARKING_ALLOWED_RADIUS_METERS || 100
-          : process.env.ALLOWED_RADIUS_METERS || 150
+        isVaniStall
+          ? process.env.VANI_STALL_ALLOWED_RADIUS_METERS || 100
+          : isParking
+            ? process.env.PARKING_ALLOWED_RADIUS_METERS || 100
+            : process.env.ALLOWED_RADIUS_METERS || 150
       );
       
       const maxAccuracyMeters = Number(
-        isParking
-          ? process.env.PARKING_MAX_ACCURACY_METERS || 100
-          : process.env.MAX_ACCURACY_METERS || 150
+        isVaniStall
+          ? process.env.VANI_STALL_MAX_ACCURACY_METERS || 100
+          : isParking
+            ? process.env.PARKING_MAX_ACCURACY_METERS || 100
+            : process.env.MAX_ACCURACY_METERS || 150
       );
-
       if (Number.isFinite(centerLat) && Number.isFinite(centerLng)) {
         distanceFromCenterMeters = Math.round(
           getDistanceMeters(centerLat, centerLng, latitude, longitude)

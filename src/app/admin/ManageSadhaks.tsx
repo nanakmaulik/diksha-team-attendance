@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type Department = "Diksha" | "Parking";
+type Department = "Diksha" | "Parking" | "Vani Ji Stall";
 type AttendanceGroup = "MALE" | "FEMALE";
 
 type ManagedSadhak = {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-type Department = "Diksha" | "Parking";
+type Department = "Diksha" | "Parking" | "Vani Ji Stall";
 type AttendanceGroup = "MALE" | "FEMALE";
 
 function cleanText(value: unknown) {
@@ -9,7 +9,9 @@ function cleanText(value: unknown) {
 }
 
 function getDepartment(value: string | null): Department {
-  return value === "Parking" ? "Parking" : "Diksha";
+  if (value === "Parking") return "Parking";
+  if (value === "Vani Ji Stall") return "Vani Ji Stall";
+  return "Diksha";
 }
 
 function getExpectedPin(department: Department) {
@@ -17,9 +19,12 @@ function getExpectedPin(department: Department) {
     return process.env.PARKING_ADMIN_PIN || "1111";
   }
 
+  if (department === "Vani Ji Stall") {
+    return process.env.VANI_STALL_ADMIN_PIN || "2222";
+  }
+
   return process.env.ADMIN_PIN || "1175";
 }
-
 function isAuthorized(request: NextRequest, department: Department) {
   const pin = request.nextUrl.searchParams.get("pin") || "";
   return pin === getExpectedPin(department);
