@@ -181,7 +181,7 @@ const parkingSummaryMessage = buildParkingSummaryMessage({
               >
                 <option value="ALL">All</option>
                 <option value="Morning Seva">RRP Parking</option>
-<option value="Evening Seva">BPP Parking</option>
+<option value="Evening Seva">Evening Seva</option>
               </select>
             </label>
 
@@ -210,7 +210,7 @@ const parkingSummaryMessage = buildParkingSummaryMessage({
   <Stat label="Present" value={presentRows.length} />
   <Stat label="Leave" value={leaveRows.length} />
   <Stat label="RRP Parking" value={morning.length} />
-  <Stat label="BPP Parking" value={evening.length} />
+  <Stat label="Evening Seva" value={evening.length} />
   <Stat label="Outside" value={outside.length} />
   <Stat label="Low Accuracy" value={lowAccuracy.length} />
 </div>
@@ -352,7 +352,7 @@ function Stat({ label, value }: { label: string; value: number }) {
 
   function displayParkingType(sevaType: string) {
     if (sevaType === "Morning Seva") return "RRP Parking";
-    if (sevaType === "Evening Seva") return "BPP Parking";
+    if (sevaType === "Evening Seva") return "Evening Seva";
     return sevaType;
   }
 
@@ -480,32 +480,32 @@ function Stat({ label, value }: { label: string; value: number }) {
       `📋 *${title}*`,
       `📅 Date: ${selectedDate}`,
       "",
-      "🅿️ *RPP Parking*",
+      "🅿️ *Morning Seva*",
       `✅ Present: ${rpp.present.length}`,
       `🟡 Leave: ${rpp.leave.length}`,
       `❌ Absent: ${rpp.absent.length}`,
       "",
-      "✅ *RPP Present List*",
+      "✅ *Morning Present List*",
       ...makePresentLines(rpp.present),
       "",
-      "🟡 *RPP Leave List*",
+      "🟡 *Morning Leave List*",
       ...makeLeaveLines(rpp.leave),
       "",
-      "❌ *RPP Absent List*",
+      "❌ *Morning Absent List*",
       ...makeAbsentLines(rpp.absent),
       "",
-      "🅿️ *BPP Parking*",
+      "🅿️ *Evening Seva*",
       `✅ Present: ${bpp.present.length}`,
       `🟡 Leave: ${bpp.leave.length}`,
       `❌ Absent: ${bpp.absent.length}`,
       "",
-      "✅ *BPP Present List*",
+      "✅ *Evening Present List*",
       ...makePresentLines(bpp.present),
       "",
-      "🟡 *BPP Leave List*",
+      "🟡 *Evening Leave List*",
       ...makeLeaveLines(bpp.leave),
       "",
-      "❌ *BPP Absent List*",
+      "❌ *Evening Absent List*",
       ...makeAbsentLines(bpp.absent),
       "",
       "✅ = Valid | ⚠️ = Outside | 📍 = Low GPS Accuracy",
