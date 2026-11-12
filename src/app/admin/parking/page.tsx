@@ -471,7 +471,7 @@ function Stat({ label, value }: { label: string; value: number }) {
       return names.map((name, index) => `${index + 1}. ${name}`);
     };
   
-    const rpp = getBreakdown("Morning Seva");
+    const RRP = getBreakdown("Morning Seva");
     const bpp = getBreakdown("Evening Seva");
   
     return [
@@ -480,19 +480,19 @@ function Stat({ label, value }: { label: string; value: number }) {
       `📋 *${title}*`,
       `📅 Date: ${selectedDate}`,
       "",
-      "🅿️ *RPP Parking*",
-      `✅ Present: ${rpp.present.length}`,
-      `🟡 Leave: ${rpp.leave.length}`,
-      `❌ Absent: ${rpp.absent.length}`,
+      "🅿️ *RRP Parking*",
+      `✅ Present: ${RRP.present.length}`,
+      `🟡 Leave: ${RRP.leave.length}`,
+      `❌ Absent: ${RRP.absent.length}`,
       "",
-      "✅ *RPP Present List*",
-      ...makePresentLines(rpp.present),
+      "✅ *RRP Present List*",
+      ...makePresentLines(RRP.present),
       "",
-      "🟡 *RPP Leave List*",
-      ...makeLeaveLines(rpp.leave),
+      "🟡 *RRP Leave List*",
+      ...makeLeaveLines(RRP.leave),
       "",
-      "❌ *RPP Absent List*",
-      ...makeAbsentLines(rpp.absent),
+      "❌ *RRP Absent List*",
+      ...makeAbsentLines(RRP.absent),
       "",
       "🅿️ *BPP Parking*",
       `✅ Present: ${bpp.present.length}`,
